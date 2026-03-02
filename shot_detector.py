@@ -17,6 +17,7 @@ import numpy as np
 from collections import deque
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
+from scoring_engine import ScoringEngine
 
 
 # ============================================================
@@ -43,6 +44,9 @@ class ShotEvent:
     knee_angle_at_impact: float = 0.0
     shoulder_rotation_max: float = 0.0
     hip_rotation_max: float = 0.0
+    technique_score: float = 0.0
+    score_breakdown: Dict = field(default_factory=dict)
+    injury_risks: List[Dict] = field(default_factory=list)
     confidence: float = 0.0              # 0-1 confidence of detection
 
     def to_dict(self):
@@ -64,6 +68,9 @@ class ShotEvent:
             "knee_angle_at_impact": round(self.knee_angle_at_impact, 2),
             "shoulder_rotation_max": round(self.shoulder_rotation_max, 2),
             "hip_rotation_max": round(self.hip_rotation_max, 2),
+            "technique_score": self.technique_score,
+            "score_breakdown": self.score_breakdown,
+            "injury_risks": self.injury_risks,
             "confidence": round(self.confidence, 3),
         }
 
@@ -105,10 +112,14 @@ class ShotDetector:
         self.bowler_wrist_rise_threshold = cfg.get('bowler_wrist_rise_threshold', 0.15)
         self.bowler_release_velocity_threshold = cfg.get('bowler_release_velocity_threshold', 100.0)
 
-        # --- State ---
+        # State
         self.frame_count = 0
         self.shot_count = 0
         self.detected_shots: List[ShotEvent] = []
+        
+        # Scoring & Injury
+        self.scoring_engine = ScoringEngine()
+        self.current_injury_risks = []  # Risks for the current frame
 
         # Batsman tracking buffers
         self.bat_velocity_history = deque(maxlen=int(fps * 3))     # 3 seconds history
@@ -174,6 +185,9 @@ class ShotDetector:
         # Process bowler for reaction time
         if bowler_metrics:
             self._process_bowler(bowler_metrics)
+
+        # Process injury risks per frame
+        self.current_injury_risks = self.scoring_engine.detect_injury_risks(batsman_metrics)
 
         # --- Swing Detection State Machine ---
         detected_shot = None
@@ -287,12 +301,24 @@ class ShotDetector:
         shoulder_rot_max = float(np.max(shoulder_rots)) if shoulder_rots else 0.0
         hip_rot_max = float(np.max(hip_rots)) if hip_rots else 0.0
 
+        # --- Injury Risks during swing ---
+        # Collect all unique high-severity injury risks detected during the swing
+        swing_risks = []
+        seen_types = set()
+        for m in self.swing_metrics_buffer:
+            risks = self.scoring_engine.detect_injury_risks(m)
+            for r in risks:
+                if r['type'] not in seen_types:
+                    swing_risks.append(r)
+                    seen_types.add(r['type'])
+
         # --- Confidence score ---
         confidence = self._compute_confidence(swing_speed_max, swing_frames, stability_deviation)
 
         # --- COG path ---
         cog_path = [[float(x), float(y)] for x, y in zip(cog_xs, cog_ys)]
 
+        # --- Base Shot Event ---
         shot = ShotEvent(
             shot_id=self.shot_count,
             swing_start_frame=swing_start,
@@ -313,7 +339,13 @@ class ShotDetector:
             shoulder_rotation_max=shoulder_rot_max,
             hip_rotation_max=hip_rot_max,
             confidence=confidence,
+            injury_risks=swing_risks
         )
+        
+        # --- Technique Score ---
+        score_data = self.scoring_engine.calculate_technique_score(shot.to_dict())
+        shot.technique_score = score_data['total']
+        shot.score_breakdown = score_data['breakdown']
 
         self.detected_shots.append(shot)
         return shot
@@ -428,7 +460,12 @@ class ShotDetector:
                 "reaction": round(last.reaction_time, 3),
                 "stability": round(last.stability_deviation, 4),
                 "confidence": round(last.confidence, 2),
+                "score": last.technique_score,
+                "injury_flag": len(last.injury_risks) > 0
             }
+        
+        # Current injury risks (per frame)
+        status["injury_risks"] = self.current_injury_risks
 
         return status
 

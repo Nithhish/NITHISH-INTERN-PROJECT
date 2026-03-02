@@ -213,6 +213,11 @@ last_shot_event = None
 print("[INFO] Starting multi-person skeleton tracking + shot detection...")
 print("=" * 60)
 
+# Create normal window (half screen)
+window_name = "Cricket Skeleton Tracking - Batsman & Bowler"
+cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+cv2.resizeWindow(window_name, 960, 540)  # Standard half-HD size
+
 try:
     while True:
         ret, frame = cap.read()
@@ -343,6 +348,8 @@ try:
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         cv2.putText(frame, f"Players: {player_count}", (10, 55),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+        cv2.putText(frame, "Press 'Q' to Exit", (10, 80),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
         # Metrics panel for each player
         y_offset = 90
@@ -363,6 +370,24 @@ try:
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.42, color, 1)
                     y_offset += 17
             y_offset += 8
+
+        # ---------------------------
+        # Injury Risk Alerts (Real-time)
+        # ---------------------------
+        shot_hud = shot_detector.get_hud_status()
+        current_risks = shot_hud.get('injury_risks', [])
+        
+        if current_risks:
+            cv2.rectangle(frame, (frame_w // 2 - 150, frame_h - 150), (frame_w // 2 + 150, frame_h - 40), (0, 0, 150), -1)
+            cv2.putText(frame, "⚠️ INJURY RISK ALERT", (frame_w // 2 - 130, frame_h - 125),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            
+            y_risk = frame_h - 100
+            for risk in current_risks[:2]:  # Show top 2 risks
+                msg = f"{risk['type']}: {risk['severity']}"
+                cv2.putText(frame, msg, (frame_w // 2 - 130, y_risk),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                y_risk += 20
 
         # Legend (top-right)
         cv2.rectangle(frame, (frame_w - 230, 0), (frame_w, 65), (0, 0, 0), -1)
@@ -412,10 +437,19 @@ try:
                             cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
                 cv2.putText(frame, f"Conf: {last_shot_event.confidence:.0%}", (200, panel_y + 20),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 0), 1)
+                
+                # Technique Score
+                cv2.putText(frame, f"SCORE: {last_shot_event.technique_score}", (200, panel_y + 45),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+                
+                if last_shot_event.injury_risks:
+                    cv2.putText(frame, "RISK FLAG", (200, panel_y + 70),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-        cv2.imshow("Cricket Skeleton Tracking - Batsman & Bowler", frame)
+        cv2.imshow(window_name, frame)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q') or key == ord('Q'):
             print("[INFO] User quit")
             break
 
@@ -452,12 +486,12 @@ print(f"  JSON Files Created:     {frame_count}")
 print(f"  Output Folder:          {os.path.abspath(keypoints_dir)}")
 print(f"  Players Tracked:        Batsman (Green) + Bowler (Orange)")
 print("-" * 60)
-print(f"  Total Shots Detected:   {summary['total_shots']}")
-print(f"  Avg Swing Speed:        {summary['avg_swing_speed']} deg/s")
-print(f"  Max Swing Speed:        {summary['max_swing_speed']} deg/s")
-print(f"  Avg Swing Duration:     {summary['avg_swing_duration']}s")
-print(f"  Avg Reaction Time:      {summary['avg_reaction_time']}s")
-print(f"  Avg Stability Dev:      {summary['avg_stability_deviation']}")
+print(f"  Total Shots Detected:   {summary.get('total_shots', 0)}")
+print(f"  Avg Swing Speed:        {summary.get('avg_swing_speed', 0)} deg/s")
+print(f"  Max Swing Speed:        {summary.get('max_swing_speed', 0)} deg/s")
+print(f"  Avg Swing Duration:     {summary.get('avg_swing_duration', 0)}s")
+print(f"  Avg Reaction Time:      {summary.get('avg_reaction_time', 0)}s")
+print(f"  Avg Stability Dev:      {summary.get('avg_stability_deviation', 0)}")
 print("-" * 60)
 
 for shot in summary.get('shots', []):
