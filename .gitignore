@@ -1,0 +1,31 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+
+# YOLO model weights
+*.pt
+
+# Video files (too large for git)
+*.mp4
+*.avi
+*.mov
+
+# Keypoint JSON output (generated data)
+keypoints_json/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Frame output
+frame/
