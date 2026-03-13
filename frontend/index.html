@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cricket Training Performance Dash</title>
+    <style>
+      body { background-color: #0a0a0c; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" style="background: #0a0a0c; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+      <div style="text-align: center; max-width: 80%;">
+        <div id="loading-spinner" style="width: 40px; height: 40px; border: 3px solid rgba(0,255,136,0.1); border-top-color: #00ff88; border-radius: 50%; margin: 0 auto 20px; animation: spin 1s linear infinite;"></div>
+        <h2 id="status-text" style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.5px;">Loading GameIQ...</h2>
+        <p id="status-subtext" style="margin: 10px 0 0; font-size: 13px; opacity: 0.5; line-height: 1.5;">Preparing your biomechanical dashboard.</p>
+        
+        <div id="debug-info" style="margin-top: 30px; display: none;">
+          <button onclick="checkConnection()" style="padding: 10px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px; font-size: 12px; cursor: pointer;">Run Diagnostics</button>
+          <pre id="debug-log" style="margin-top: 15px; font-size: 10px; color: #aaa; text-align: left; background: #000; padding: 10px; border-radius: 6px; overflow-x: auto; max-height: 150px;"></pre>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      @keyframes spin { to { transform: rotate(360deg); } }
+      body { background-color: #0a0a0c; margin: 0; overflow: hidden; }
+    </style>
+
+    <script>
+      // Show debug info after 5 seconds if still loading
+      setTimeout(() => {
+        const root = document.getElementById('root');
+        if (root && root.innerHTML.includes('Loading GameIQ')) {
+           document.getElementById('debug-info').style.display = 'block';
+           document.getElementById('status-subtext').innerText = "It seems to be taking longer than usual. Please check the Cloudflare 'Visit Site' button if it appeared.";
+        }
+      }, 5000);
+
+      window.onerror = function(m, u, l) {
+        document.getElementById('status-text').innerText = "Load Failed";
+        document.getElementById('status-subtext').innerText = m;
+        return false;
+      };
+
+      async function checkConnection() {
+        const log = document.getElementById('debug-log');
+        log.innerText = "Starting diagnostics...\n";
+        try {
+          log.innerText += "1. Checking URL: " + window.location.href + "\n";
+          const res = await fetch('/players/');
+          log.innerText += "2. API Check: " + res.status + " " + res.statusText + "\n";
+          if (res.ok) log.innerText += "3. Success! API is reachable.\n";
+          else log.innerText += "3. API Error. Check backend logs.\n";
+        } catch (e) {
+          log.innerText += "ERROR: " + e.message + "\n";
+          log.innerText += "Tip: If you see 'Failed to fetch', try visiting the URL with ?bypass-tunnel-reminder=true\n";
+        }
+      }
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

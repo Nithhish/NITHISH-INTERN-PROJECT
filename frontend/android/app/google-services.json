@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "696612341167",
+    "project_id": "nithish-hosh",
+    "storage_bucket": "nithish-hosh.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696612341167:android:94dbb508a06d9f9b6d5b5a",
+        "android_client_info": {
+          "package_name": "COM.CRICKET"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD85TW31vy0_OFNKEgEsG-NWNpL76-lWB8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,8 @@
+{
+  "appId": "COM.CRICKET",
+  "appName": "Cricket Training",
+  "webDir": "dist",
+  "server": {
+    "cleartext": true
+  }
+}

@@ -1,0 +1,62 @@
+# Environment files (Secrets!)
+.env
+*.env
+frontend/.env
+
+# Virtual Environments
+.venv/
+.venv_311/
+venv/
+env/
+backend_env/
+
+# Logs
+*.log
+api_tunnel.log
+latest_tunnel.log
+web_tunnel.log
+firebase-debug.log
+
+# Node Binaries
+node/
+node20.zip
+node-v20.9.0.msi
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+backend/__pycache__/
+
+# IDE
+.vscode/
+.idea/
+
+# YOLO model weights
+*.pt
+
+# Video/Media (too large for git)
+*.mp4
+*.avi
+*.mov
+*.jpg
+*.jpeg
+*.png
+uploads/
+frame/
+keypoints_json/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Database
+cricket_app.db
+
+# APKs
+*.apk
+
+# Node modules
+node_modules/
+frontend/node_modules/
+frontend/dist/

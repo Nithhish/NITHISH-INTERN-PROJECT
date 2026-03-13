@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # --- Backend AI API ---
+  backend:
+    build: .
+    volumes:
+      - .:/app
+      - uploads:/app/uploads
+    environment:
+      - DATABASE_URL=postgresql://cricket_user:cricket_pass@db:5432/cricket_db
+      - TELEGRAM_BOT_TOKEN=8669701587:AAFiRK40sur96_F82auBXGU106-E3mu6i1s
+      - TELEGRAM_CHAT_ID=2040084906
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  # --- Persistent Storage (PostgreSQL) ---
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=cricket_user
+      - POSTGRES_PASSWORD=cricket_pass
+      - POSTGRES_DB=cricket_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+  uploads:
