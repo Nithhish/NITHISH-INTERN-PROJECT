@@ -483,6 +483,16 @@ export default function App() {
     const [uploadController, setUploadController] = useState(null)
     const isOnline = useOnlineStatus()
     const fileInputRef = useRef(null)
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth)
+
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth)
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+
+    const isMobile = windowWidth < 1024
+    const isSmallMobile = windowWidth < 640
 
 
     const formatDate = (dateStr) => {
@@ -740,10 +750,25 @@ export default function App() {
     }
 
     return (
-        <div style={{ minHeight: '100vh', padding: '24px 20px', maxWidth: 1600, margin: '0 auto', fontFamily: 'Inter, system-ui, sans-serif', color: '#fff' }}>
+        <div style={{ 
+            minHeight: '100vh', 
+            padding: isSmallMobile ? '16px 12px' : '24px 20px', 
+            maxWidth: 1600, 
+            margin: '0 auto', 
+            fontFamily: 'Inter, system-ui, sans-serif', 
+            color: '#fff',
+            overflowX: 'hidden'
+        }}>
 
             {/* ── Header ── */}
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+            <header style={{ 
+                display: 'flex', 
+                flexDirection: isSmallMobile ? 'column' : 'row',
+                justifyContent: 'space-between', 
+                alignItems: isSmallMobile ? 'flex-start' : 'center', 
+                marginBottom: isSmallMobile ? 24 : 32,
+                gap: 16
+            }}>
                 <div>
                     <h1 style={{ fontSize: 28, fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>
                         Cricket<span style={{ color: '#00ff88' }}>AI</span> Analysis
@@ -776,7 +801,11 @@ export default function App() {
                 </div>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 20 }}>
+            <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', 
+                gap: 20 
+            }}>
 
                 {/* ── Sidebar ── */}
                 <aside style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -943,7 +972,11 @@ export default function App() {
                             {shots.length > 0 ? (
                                 <>
                                     {/* KPI Cards */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+                                    <div style={{ 
+                                        display: 'grid', 
+                                        gridTemplateColumns: isSmallMobile ? '1fr' : (windowWidth < 1280 ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)'), 
+                                        gap: 14 
+                                    }}>
                                         <StatBadge icon={Trophy} label='Tech Score' value={avgTech.toFixed(1)} color={scoreColor(avgTech)} subtitle='Overall technique quality' />
                                         <StatBadge icon={RefreshCw} label='Hip Rotation' value={(shots[0]?.angle_metrics?.hip_rotation || 0).toFixed(1)} unit='°' color='#ffaa00' subtitle='Hip-Shoulder Separation' />
                                         <StatBadge icon={Shield} label='Stability' value={avgStab < 0.05 ? 'Stable' : 'Unstable'} unit='' color={avgStab < 0.05 ? '#00ff88' : '#ffaa00'} subtitle={`Deviation: ${avgStab.toFixed(4)}`} />
@@ -975,7 +1008,11 @@ export default function App() {
                                     </div>
 
                                     {/* Charts row */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div style={{ 
+                                        display: 'grid', 
+                                        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+                                        gap: 16 
+                                    }}>
                                         {/* Angle Chart */}
                                         <div style={card}>
                                             <h3 style={{ margin: '0 0 18px', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
